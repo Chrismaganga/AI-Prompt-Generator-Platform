@@ -1,0 +1,304 @@
+{% extends 'base.html' %} {% block title %}Checkout - {{ prompt.title }}{%
+endblock %} {% block extra_css %}
+<style>
+  .StripeElement {
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: white;
+  }
+  .StripeElement--focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  .StripeElement--invalid {
+    border-color: #ef4444;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="max-w-2xl mx-auto">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+      Complete Your Purchase
+    </h1>
+    <p class="text-gray-600">You're about to purchase "{{ prompt.title }}"</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Payment Form -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">
+          Payment Information
+        </h2>
+
+        <form id="payment-form">
+          <div class="mb-6">
+            <label
+              for="card-element"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Credit or Debit Card
+            </label>
+            <div id="card-element" class="StripeElement">
+              <!-- Stripe Elements will be inserted here -->
+            </div>
+            <div
+              id="card-errors"
+              class="mt-2 text-sm text-red-600"
+              role="alert"
+            ></div>
+          </div>
+
+          <div class="mb-6">
+            <label
+              for="email"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value="{{ user.email }}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div class="mb-6">
+            <label
+              for="name"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Full Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value="{{ user.full_name }}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            id="submit-button"
+            class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span id="button-text">
+              <i class="fas fa-lock mr-2"></i>Pay ${{ prompt.price }}
+            </span>
+            <span id="spinner" class="hidden">
+              <i class="fas fa-spinner fa-spin mr-2"></i>Processing...
+            </span>
+          </button>
+        </form>
+
+        <div class="mt-6 text-center">
+          <p class="text-sm text-gray-600">
+            <i class="fas fa-shield-alt mr-1"></i>
+            Your payment is secure and encrypted
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
+
+        <!-- Prompt Details -->
+        <div class="border-b border-gray-200 pb-4 mb-4">
+          <div class="flex items-start space-x-4">
+            <div
+              class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0"
+            >
+              <i class="fas fa-brain text-2xl text-blue-600"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900 mb-1">
+                {{ prompt.title }}
+              </h3>
+              <p class="text-sm text-gray-600 mb-2">
+                {{ prompt.description|truncatewords:15 }}
+              </p>
+              <div class="flex items-center text-sm text-gray-500">
+                <i class="fas fa-user mr-1"></i>
+                <span>{{ prompt.author.username }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Price Breakdown -->
+        <div class="space-y-3 mb-6">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Prompt Price</span>
+            <span class="font-semibold">${{ prompt.price }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Processing Fee</span>
+            <span class="font-semibold">$0.00</span>
+          </div>
+          <div class="border-t border-gray-200 pt-3">
+            <div class="flex justify-between">
+              <span class="text-lg font-semibold text-gray-900">Total</span>
+              <span class="text-lg font-semibold text-gray-900"
+                >${{ prompt.price }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- What You Get -->
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h4 class="font-semibold text-gray-900 mb-3">What You'll Get</h4>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-center">
+              <i class="fas fa-check text-green-500 mr-2"></i>
+              Full prompt content
+            </li>
+            <li class="flex items-center">
+              <i class="fas fa-check text-green-500 mr-2"></i>
+              Lifetime access
+            </li>
+            <li class="flex items-center">
+              <i class="fas fa-check text-green-500 mr-2"></i>
+              Updates and improvements
+            </li>
+            <li class="flex items-center">
+              <i class="fas fa-check text-green-500 mr-2"></i>
+              Support from the creator
+            </li>
+          </ul>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+          <div class="flex items-start">
+            <i class="fas fa-shield-alt text-blue-600 mt-1 mr-3"></i>
+            <div>
+              <h4 class="font-semibold text-blue-900 mb-1">Secure Payment</h4>
+              <p class="text-sm text-blue-800">
+                Your payment is processed securely by Stripe. We never store
+                your credit card information.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Link -->
+  <div class="text-center mt-8">
+    <a
+      href="{% url 'prompts:prompt_detail' prompt.slug %}"
+      class="text-gray-600 hover:text-gray-800"
+    >
+      <i class="fas fa-arrow-left mr-1"></i>Back to Prompt
+    </a>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  // Initialize Stripe
+  const stripe = Stripe("{{ stripe_publishable_key }}");
+  const elements = stripe.elements();
+
+  // Create card element
+  const card = elements.create("card", {
+    style: {
+      base: {
+        fontSize: "16px",
+        color: "#424770",
+        "::placeholder": {
+          color: "#aab7c4",
+        },
+      },
+      invalid: {
+        color: "#9e2146",
+      },
+    },
+  });
+
+  // Mount the card element
+  card.mount("#card-element");
+
+  // Handle form submission
+  const form = document.getElementById("payment-form");
+  const submitButton = document.getElementById("submit-button");
+  const buttonText = document.getElementById("button-text");
+  const spinner = document.getElementById("spinner");
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    // Disable submit button
+    submitButton.disabled = true;
+    buttonText.classList.add("hidden");
+    spinner.classList.remove("hidden");
+
+    // Create payment method
+    const { error, paymentMethod } = await stripe.createPaymentMethod({
+      type: "card",
+      card: card,
+      billing_details: {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+      },
+    });
+
+    if (error) {
+      // Show error message
+      const errorElement = document.getElementById("card-errors");
+      errorElement.textContent = error.message;
+
+      // Re-enable submit button
+      submitButton.disabled = false;
+      buttonText.classList.remove("hidden");
+      spinner.classList.add("hidden");
+    } else {
+      // Confirm payment intent
+      const { error: confirmError } = await stripe.confirmCardPayment(
+        "{{ client_secret }}",
+        {
+          payment_method: paymentMethod.id,
+        }
+      );
+
+      if (confirmError) {
+        // Show error message
+        const errorElement = document.getElementById("card-errors");
+        errorElement.textContent = confirmError.message;
+
+        // Re-enable submit button
+        submitButton.disabled = false;
+        buttonText.classList.remove("hidden");
+        spinner.classList.add("hidden");
+      } else {
+        // Payment successful - redirect to success page
+        window.location.href =
+          '{% url "payments:payment_success" payment.id %}';
+      }
+    }
+  });
+
+  // Handle card element errors
+  card.addEventListener("change", ({ error }) => {
+    const displayError = document.getElementById("card-errors");
+    if (error) {
+      displayError.textContent = error.message;
+    } else {
+      displayError.textContent = "";
+    }
+  });
+</script>
+{% endblock %}

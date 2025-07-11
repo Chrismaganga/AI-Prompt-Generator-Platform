@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit Prompt{% else %}Create New Prompt{% endif %} - PromptHub{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+      {% if form.instance.pk %}
+      <i class="fas fa-edit mr-2"></i>Edit Prompt {% else %}
+      <i class="fas fa-plus mr-2"></i>Create New Prompt {% endif %}
+    </h1>
+    <p class="text-gray-600">
+      {% if form.instance.pk %} Update your prompt details and content {% else
+      %} Share your AI prompt with the community and start earning {% endif %}
+    </p>
+  </div>
+
+  <!-- Form -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Basic Information -->
+      <div class="border-b border-gray-200 pb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+          Basic Information
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>{{ form.title|as_crispy_field }}</div>
+          <div>{{ form.category|as_crispy_field }}</div>
+        </div>
+
+        <div class="mt-6">{{ form.description|as_crispy_field }}</div>
+
+        <div class="mt-6">
+          {{ form.tags|as_crispy_field }}
+          <p class="text-sm text-gray-500 mt-1">
+            Enter tags separated by commas (e.g., writing, marketing, AI)
+          </p>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="border-b border-gray-200 pb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Pricing</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>{{ form.price_type|as_crispy_field }}</div>
+          <div
+            id="price-field"
+            class="{% if form.price_type.value == 'free' %}hidden{% endif %}"
+          >
+            {{ form.price|as_crispy_field }}
+          </div>
+        </div>
+
+        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+          <div class="flex items-start">
+            <i class="fas fa-info-circle text-blue-600 mt-1 mr-3"></i>
+            <div>
+              <h4 class="font-semibold text-blue-900 mb-1">Pricing Tips</h4>
+              <ul class="text-sm text-blue-800 space-y-1">
+                <li>• Free prompts help build your reputation</li>
+                <li>• Paid prompts typically range from $1-$50</li>
+                <li>• Consider the value and complexity of your prompt</li>
+                <li>• You can change pricing anytime</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="border-b border-gray-200 pb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Prompt Content</h2>
+
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Full Prompt Content
+          </label>
+          {{ form.content }}
+          <p class="text-sm text-gray-500 mt-1">
+            Write your complete AI prompt here. This is what users will get when
+            they download or purchase your prompt.
+          </p>
+        </div>
+
+        <div class="mb-6">
+          {{ form.preview_content|as_crispy_field }}
+          <p class="text-sm text-gray-500 mt-1">
+            Show users a preview of what your prompt can generate. This helps
+            them decide whether to download or purchase.
+          </p>
+        </div>
+      </div>
+
+      <!-- Guidelines -->
+      <div class="bg-yellow-50 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+          <i class="fas fa-lightbulb text-yellow-600 mt-1 mr-3"></i>
+          <div>
+            <h4 class="font-semibold text-yellow-900 mb-2">
+              Prompt Creation Guidelines
+            </h4>
+            <ul class="text-sm text-yellow-800 space-y-1">
+              <li>• Be specific and detailed in your instructions</li>
+              <li>• Include examples of expected outputs</li>
+              <li>• Use clear, professional language</li>
+              <li>• Test your prompt before publishing</li>
+              <li>• Respect copyright and intellectual property</li>
+              <li>• Avoid prompts that could be harmful or unethical</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <button
+          type="submit"
+          class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200"
+        >
+          {% if form.instance.pk %}
+          <i class="fas fa-save mr-2"></i>Update Prompt {% else %}
+          <i class="fas fa-paper-plane mr-2"></i>Create Prompt {% endif %}
+        </button>
+
+        <a
+          href="{% url 'prompts:prompt_list' %}"
+          class="bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transition duration-200 text-center"
+        >
+          <i class="fas fa-times mr-2"></i>Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  // Handle price type toggle
+  document.addEventListener("DOMContentLoaded", function () {
+    const priceTypeSelect = document.getElementById("id_price_type");
+    const priceField = document.getElementById("price-field");
+    const priceInput = document.getElementById("id_price");
+
+    function togglePriceField() {
+      if (priceTypeSelect.value === "free") {
+        priceField.classList.add("hidden");
+        priceInput.value = "0.00";
+        priceInput.required = false;
+      } else {
+        priceField.classList.remove("hidden");
+        priceInput.required = true;
+      }
+    }
+
+    priceTypeSelect.addEventListener("change", togglePriceField);
+    togglePriceField(); // Initial state
+  });
+</script>
+{% endblock %}

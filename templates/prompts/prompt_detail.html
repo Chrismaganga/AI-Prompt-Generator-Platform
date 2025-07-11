@@ -1,0 +1,326 @@
+{% extends 'base.html' %} {% block title %}{{ prompt.title }} - PromptHub{%
+endblock %} {% block content %}
+<div class="max-w-4xl mx-auto">
+  <!-- Breadcrumb -->
+  <nav class="mb-6">
+    <ol class="flex items-center space-x-2 text-sm text-gray-600">
+      <li>
+        <a href="{% url 'prompts:prompt_list' %}" class="hover:text-blue-600"
+          >Home</a
+        >
+      </li>
+      <li><i class="fas fa-chevron-right text-xs"></i></li>
+      <li>
+        <a
+          href="{% url 'prompts:category_detail' prompt.category.slug %}"
+          class="hover:text-blue-600"
+          >{{ prompt.category.name }}</a
+        >
+      </li>
+      <li><i class="fas fa-chevron-right text-xs"></i></li>
+      <li class="text-gray-900">{{ prompt.title }}</li>
+    </ol>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column - Prompt Details -->
+    <div class="lg:col-span-2">
+      <!-- Header -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex-1">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+              {{ prompt.title }}
+            </h1>
+            <div class="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+              <span class="flex items-center">
+                <i class="fas fa-user mr-1"></i>
+                <a href="#" class="hover:text-blue-600"
+                  >{{ prompt.author.username }}</a
+                >
+              </span>
+              <span class="flex items-center">
+                <i class="fas fa-calendar mr-1"></i>
+                {{ prompt.created_at|date:"M d, Y" }}
+              </span>
+              <span class="flex items-center">
+                <i class="fas fa-eye mr-1"></i>
+                {{ prompt.views }} views
+              </span>
+            </div>
+          </div>
+          <div class="text-right">
+            {% if prompt.price_type == 'free' %}
+            <span
+              class="inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold bg-green-100 text-green-800"
+            >
+              <i class="fas fa-gift mr-2"></i>Free
+            </span>
+            {% else %}
+            <span
+              class="inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold bg-blue-100 text-blue-800"
+            >
+              <i class="fas fa-dollar-sign mr-2"></i>${{ prompt.price }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Tags -->
+        {% if prompt.tags.all %}
+        <div class="mb-4">
+          <div class="flex flex-wrap gap-2">
+            {% for tag in prompt.tags.all %}
+            <span
+              class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
+            >
+              #{{ tag.name }}
+            </span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Rating -->
+        {% if prompt.average_rating > 0 %}
+        <div class="flex items-center mb-4">
+          <div class="flex items-center">
+            {% for i in "12345" %}
+            <i
+              class="fas fa-star text-lg {% if forloop.counter <= prompt.average_rating %}text-yellow-400{% else %}text-gray-300{% endif %}"
+            ></i>
+            {% endfor %}
+          </div>
+          <span class="text-sm text-gray-600 ml-2"
+            >{{ prompt.average_rating|floatformat:1 }} ({{ prompt.total_ratings
+            }} reviews)</span
+          >
+        </div>
+        {% endif %}
+
+        <!-- Description -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Description</h3>
+          <p class="text-gray-700 leading-relaxed">{{ prompt.description }}</p>
+        </div>
+
+        <!-- Preview Content -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Preview</h3>
+          <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+            <p class="text-gray-700 whitespace-pre-wrap">
+              {{ prompt.preview_content }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          {% if user.is_authenticated %} {% if prompt.price_type == 'free' %} {%
+          if has_downloaded %}
+          <button
+            class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold cursor-not-allowed"
+          >
+            <i class="fas fa-check mr-2"></i>Already Downloaded
+          </button>
+          {% else %}
+          <a
+            href="{% url 'prompts:download_prompt' prompt.slug %}"
+            class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200 text-center"
+          >
+            <i class="fas fa-download mr-2"></i>Download Free
+          </a>
+          {% endif %} {% else %} {% if has_purchased %}
+          <button
+            class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold cursor-not-allowed"
+          >
+            <i class="fas fa-check mr-2"></i>Already Purchased
+          </button>
+          {% else %}
+          <a
+            href="{% url 'prompts:purchase_prompt' prompt.slug %}"
+            class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 text-center"
+          >
+            <i class="fas fa-shopping-cart mr-2"></i>Purchase for ${{
+            prompt.price }}
+          </a>
+          {% endif %} {% endif %} {% else %}
+          <a
+            href="{% url 'account_login' %}?next={{ request.path }}"
+            class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 text-center"
+          >
+            <i class="fas fa-sign-in-alt mr-2"></i>Login to Download
+          </a>
+          {% endif %} {% if user.is_authenticated and user == prompt.author %}
+          <a
+            href="{% url 'prompts:prompt_update' prompt.slug %}"
+            class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition duration-200 text-center"
+          >
+            <i class="fas fa-edit mr-2"></i>Edit Prompt
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Full Content (if purchased/downloaded) -->
+      {% if user.is_authenticated and has_purchased or has_downloaded or
+      prompt.price_type == 'free' %}
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Full Prompt Content
+        </h3>
+        <div class="bg-gray-50 rounded-lg p-4 border">
+          {{ prompt.content|safe }}
+        </div>
+        <div class="mt-4 text-sm text-gray-600">
+          <i class="fas fa-info-circle mr-1"></i>
+          Copy this prompt and use it with your preferred AI tool.
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Reviews Section -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900">Reviews</h3>
+          {% if user.is_authenticated and not user_review %}
+          <a
+            href="{% url 'prompts:add_review' prompt.slug %}"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
+          >
+            <i class="fas fa-plus mr-1"></i>Add Review
+          </a>
+          {% endif %}
+        </div>
+
+        {% if reviews %}
+        <div class="space-y-4">
+          {% for review in reviews %}
+          <div class="border-b border-gray-200 pb-4 last:border-b-0">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <img
+                  src="https://ui-avatars.com/api/?name={{ review.user.username }}&background=3B82F6&color=fff"
+                  alt="{{ review.user.username }}"
+                  class="w-8 h-8 rounded-full"
+                />
+                <span class="font-medium text-gray-900"
+                  >{{ review.user.username }}</span
+                >
+              </div>
+              <div class="flex items-center">
+                {% for i in "12345" %}
+                <i
+                  class="fas fa-star text-sm {% if forloop.counter <= review.rating %}text-yellow-400{% else %}text-gray-300{% endif %}"
+                ></i>
+                {% endfor %}
+              </div>
+            </div>
+            <p class="text-gray-700">{{ review.comment }}</p>
+            <div class="text-sm text-gray-500 mt-2">
+              {{ review.created_at|date:"M d, Y" }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+          <i class="fas fa-comments text-4xl text-gray-300 mb-4"></i>
+          <p class="text-gray-600">
+            No reviews yet. Be the first to review this prompt!
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Column - Sidebar -->
+    <div class="lg:col-span-1">
+      <!-- Author Info -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Author</h3>
+        <div class="flex items-center space-x-3 mb-4">
+          <img
+            src="https://ui-avatars.com/api/?name={{ prompt.author.username }}&background=3B82F6&color=fff&size=64"
+            alt="{{ prompt.author.username }}"
+            class="w-16 h-16 rounded-full"
+          />
+          <div>
+            <h4 class="font-semibold text-gray-900">
+              {{ prompt.author.username }}
+            </h4>
+            <p class="text-sm text-gray-600">
+              {{ prompt.author.prompts.count }} prompts
+            </p>
+          </div>
+        </div>
+        {% if prompt.author.bio %}
+        <p class="text-gray-700 text-sm mb-4">{{ prompt.author.bio }}</p>
+        {% endif %}
+        <a
+          href="#"
+          class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          <i class="fas fa-user mr-1"></i>View Profile
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistics</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Views</span>
+            <span class="font-semibold">{{ prompt.views }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Downloads</span>
+            <span class="font-semibold">{{ prompt.downloads }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Purchases</span>
+            <span class="font-semibold">{{ prompt.purchases }}</span>
+          </div>
+          {% if prompt.average_rating > 0 %}
+          <div class="flex justify-between">
+            <span class="text-gray-600">Rating</span>
+            <span class="font-semibold"
+              >{{ prompt.average_rating|floatformat:1 }}/5</span
+            >
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Related Prompts -->
+      {% if related_prompts %}
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Related Prompts
+        </h3>
+        <div class="space-y-3">
+          {% for related in related_prompts %}
+          <a
+            href="{% url 'prompts:prompt_detail' related.slug %}"
+            class="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition duration-200"
+          >
+            <h4 class="font-medium text-gray-900 mb-1">{{ related.title }}</h4>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-600">{{ related.author.username }}</span>
+              <span
+                class="{% if related.price_type == 'free' %}text-green-600{% else %}text-blue-600{% endif %} font-semibold"
+              >
+                {% if related.price_type == 'free' %}Free{% else %}${{
+                related.price }}{% endif %}
+              </span>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
