@@ -1,0 +1,379 @@
+{% extends 'base.html' %} {% block title %}Analytics Dashboard - PromptHub{%
+endblock %} {% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %} {% block content %}
+<div class="max-w-7xl mx-auto">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+      <i class="fas fa-chart-bar mr-2"></i>Analytics Dashboard
+    </h1>
+    <p class="text-gray-600">Track your prompt performance and earnings</p>
+  </div>
+
+  <!-- Overview Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Prompts -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center">
+        <div class="p-3 bg-blue-100 rounded-lg">
+          <i class="fas fa-file-alt text-blue-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Total Prompts</p>
+          <p class="text-2xl font-bold text-gray-900">{{ total_prompts }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Published Prompts -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center">
+        <div class="p-3 bg-green-100 rounded-lg">
+          <i class="fas fa-check-circle text-green-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Published</p>
+          <p class="text-2xl font-bold text-gray-900">
+            {{ published_prompts }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Earnings -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center">
+        <div class="p-3 bg-yellow-100 rounded-lg">
+          <i class="fas fa-dollar-sign text-yellow-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Total Earnings</p>
+          <p class="text-2xl font-bold text-gray-900">
+            ${{ total_earnings|floatformat:2 }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Earnings -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center">
+        <div class="p-3 bg-purple-100 rounded-lg">
+          <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">This Month</p>
+          <p class="text-2xl font-bold text-gray-900">
+            ${{ monthly_earnings|floatformat:2 }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Performance Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        Performance (Last 30 Days)
+      </h3>
+      <canvas id="performanceChart" width="400" height="200"></canvas>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        Revenue (Last 30 Days)
+      </h3>
+      <canvas id="revenueChart" width="400" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Top Performing Prompts -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h3 class="text-lg font-semibold text-gray-900 mb-6">
+      Top Performing Prompts
+    </h3>
+
+    {% if top_prompts %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Prompt
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Status
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Views
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Downloads
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Purchases
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Revenue
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Rating
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for prompt in top_prompts %}
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 h-10 w-10">
+                  <div
+                    class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center"
+                  >
+                    <i class="fas fa-brain text-blue-600"></i>
+                  </div>
+                </div>
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-gray-900">
+                    <a
+                      href="{% url 'prompts:prompt_detail' prompt.slug %}"
+                      class="hover:text-blue-600"
+                    >
+                      {{ prompt.title }}
+                    </a>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    {{ prompt.category.name }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if prompt.status == 'published' %}bg-green-100 text-green-800{% elif prompt.status == 'draft' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}"
+              >
+                {{ prompt.get_status_display }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ prompt.views }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ prompt.downloads }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ prompt.purchases }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+            >
+              ${{ prompt.total_revenue|floatformat:2|default:"0.00" }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <div class="flex items-center">
+                <div class="flex items-center">
+                  {% for i in "12345" %}
+                  <i
+                    class="fas fa-star text-sm {% if forloop.counter <= prompt.average_rating %}text-yellow-400{% else %}text-gray-300{% endif %}"
+                  ></i>
+                  {% endfor %}
+                </div>
+                <span class="ml-1 text-gray-500"
+                  >({{ prompt.total_ratings }})</span
+                >
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+      <div class="text-gray-400 mb-4">
+        <i class="fas fa-chart-bar text-6xl"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">
+        No performance data yet
+      </h3>
+      <p class="text-gray-600">
+        Start creating prompts to see your performance metrics!
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Recent Downloads -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-6">Recent Downloads</h3>
+
+      {% if recent_downloads %}
+      <div class="space-y-4">
+        {% for download in recent_downloads %}
+        <div class="flex items-center space-x-4">
+          <div class="flex-shrink-0">
+            <div
+              class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-download text-blue-600 text-sm"></i>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">
+              <a
+                href="{% url 'prompts:prompt_detail' download.prompt.slug %}"
+                class="hover:text-blue-600"
+              >
+                {{ download.prompt.title }}
+              </a>
+            </p>
+            <p class="text-sm text-gray-500">by {{ download.user.username }}</p>
+          </div>
+          <div class="text-sm text-gray-500">
+            {{ download.created_at|timesince }} ago
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-8">
+        <div class="text-gray-400 mb-2">
+          <i class="fas fa-download text-3xl"></i>
+        </div>
+        <p class="text-gray-600">No recent downloads</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Recent Purchases -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-6">Recent Purchases</h3>
+
+      {% if recent_purchases %}
+      <div class="space-y-4">
+        {% for purchase in recent_purchases %}
+        <div class="flex items-center space-x-4">
+          <div class="flex-shrink-0">
+            <div
+              class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center"
+            >
+              <i class="fas fa-shopping-cart text-green-600 text-sm"></i>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">
+              <a
+                href="{% url 'prompts:prompt_detail' purchase.prompt.slug %}"
+                class="hover:text-blue-600"
+              >
+                {{ purchase.prompt.title }}
+              </a>
+            </p>
+            <p class="text-sm text-gray-500">by {{ purchase.user.username }}</p>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-medium text-gray-900">
+              ${{ purchase.amount }}
+            </div>
+            <div class="text-sm text-gray-500">
+              {{ purchase.created_at|timesince }} ago
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-8">
+        <div class="text-gray-400 mb-2">
+          <i class="fas fa-shopping-cart text-3xl"></i>
+        </div>
+        <p class="text-gray-600">No recent purchases</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  // Performance Chart
+  const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+  const performanceChart = new Chart(performanceCtx, {
+    type: 'line',
+    data: {
+      labels: {{ daily_stats|safe }}.map(item => item.date),
+      datasets: [{
+        label: 'Downloads',
+        data: {{ daily_stats|safe }}.map(item => item.downloads),
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.1
+      }, {
+        label: 'Purchases',
+        data: {{ daily_stats|safe }}.map(item => item.purchases),
+        borderColor: 'rgb(16, 185, 129)',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // Revenue Chart
+  const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+  const revenueChart = new Chart(revenueCtx, {
+    type: 'bar',
+    data: {
+      labels: {{ daily_stats|safe }}.map(item => item.date),
+      datasets: [{
+        label: 'Revenue ($)',
+        data: {{ daily_stats|safe }}.map(item => item.revenue),
+        backgroundColor: 'rgba(168, 85, 247, 0.8)',
+        borderColor: 'rgb(168, 85, 247)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '$' + value;
+            }
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
